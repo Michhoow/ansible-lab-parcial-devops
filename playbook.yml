@@ -1,0 +1,46 @@
+---
+- name: Laboratorio Ansible con contenedores Docker
+  hosts: docker
+  gather_facts: true
+
+  vars:
+    demo_dir: /tmp/ansible-demo
+    subdirs:
+      - logs
+      - backup
+      - config
+
+  tasks:
+    - name: Mostrar el nombre del host
+      ansible.builtin.debug:
+        msg: "Nombre del host: {{ ansible_facts['hostname'] }} (inventario: {{ inventory_hostname }})"
+
+    - name: Mostrar el sistema operativo
+      ansible.builtin.debug:
+        msg: "Sistema operativo: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}"
+
+    - name: Crear el directorio {{ demo_dir }}
+      ansible.builtin.file:
+        path: "{{ demo_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Crear info.txt con el nombre del servidor y el sistema operativo
+      ansible.builtin.copy:
+        dest: "{{ demo_dir }}/info.txt"
+        mode: "0644"
+        content: |
+          Servidor: {{ inventory_hostname }}
+          Sistema operativo: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+
+    - name: Crear directorios logs, backup y config con un loop
+      ansible.builtin.file:
+        path: "{{ demo_dir }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ subdirs }}"
+
+    - name: Mensaje solo para Ubuntu
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} ejecuta Ubuntu (mensaje condicional cumplido)"
+      when: ansible_facts['distribution'] == "Ubuntu"
